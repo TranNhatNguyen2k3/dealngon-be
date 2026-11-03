@@ -1,0 +1,222 @@
+openapi: 3.0.3
+info:
+  title: DealNgon API
+  version: 0.1.0
+  description: API so sánh giá và deal. Giá chỉ hiện khi có trong dữ liệu.
+servers:
+  - url: http://localhost:8080
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: OK
+  /ready:
+    get:
+      summary: Readiness
+      responses:
+        "200":
+          description: Ready
+  /api/v1/products:
+    get:
+      summary: Danh sách sản phẩm
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Sort"
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: category
+          schema: { type: string }
+        - in: query
+          name: brand
+          schema: { type: string }
+        - in: query
+          name: merchant
+          schema: { type: string }
+        - in: query
+          name: min_price
+          schema: { type: integer }
+        - in: query
+          name: max_price
+          schema: { type: integer }
+        - in: query
+          name: min_discount
+          schema: { type: number }
+      responses:
+        "200":
+          description: Envelope sản phẩm
+  /api/v1/products/{id}:
+    get:
+      summary: Chi tiết sản phẩm theo id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Chi tiết
+        "404":
+          description: Không tìm thấy
+  /api/v1/products/slug/{slug}:
+    get:
+      summary: Chi tiết sản phẩm theo slug
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Chi tiết
+  /api/v1/products/{id}/offers:
+    get:
+      summary: Offer của sản phẩm
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Danh sách offer
+  /api/v1/products/{id}/price-history:
+    get:
+      summary: Lịch sử giá
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Các mốc giá
+  /api/v1/search:
+    get:
+      summary: Tìm kiếm
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Sort"
+      responses:
+        "200":
+          description: Kết quả
+  /api/v1/categories:
+    get:
+      summary: Danh mục
+      responses:
+        "200": { description: OK }
+  /api/v1/categories/{slug}:
+    get:
+      summary: Sản phẩm theo danh mục
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+  /api/v1/brands:
+    get:
+      summary: Thương hiệu
+      responses:
+        "200": { description: OK }
+  /api/v1/brands/{slug}:
+    get:
+      summary: Sản phẩm theo thương hiệu
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+  /api/v1/merchants:
+    get:
+      summary: Nhà bán
+      responses:
+        "200": { description: OK }
+  /api/v1/deals:
+    get:
+      summary: Deal
+      responses:
+        "200": { description: OK }
+  /api/v1/deals/{id}:
+    get:
+      summary: Deal theo id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { description: OK }
+  /api/v1/deals/slug/{slug}:
+    get:
+      summary: Deal theo slug
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: OK }
+  /api/v1/affiliate/redirect/{offerId}:
+    get:
+      summary: Ghi click và chuyển 302 tới link affiliate mock
+      parameters:
+        - in: path
+          name: offerId
+          required: true
+          schema: { type: integer }
+      responses:
+        "302": { description: Redirect }
+  /api/v1/events:
+    post:
+      summary: Ghi sự kiện analytics
+      responses:
+        "200": { description: OK }
+  /api/v1/price-alerts:
+    post:
+      summary: Lưu cảnh báo giá, chưa gửi email
+      responses:
+        "201": { description: Created }
+  /api/v1/admin/login:
+    post:
+      summary: Đăng nhập admin
+      responses:
+        "200": { description: JWT }
+  /api/v1/admin/dashboard:
+    get:
+      summary: Thống kê
+      security: [{ bearer: [] }]
+      responses:
+        "200": { description: OK }
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Page:
+      in: query
+      name: page
+      schema: { type: integer, minimum: 1, default: 1 }
+    Limit:
+      in: query
+      name: limit
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    Sort:
+      in: query
+      name: sort
+      schema:
+        type: string
+        enum: [relevance, price_asc, price_desc, discount, deal, popular]

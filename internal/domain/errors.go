@@ -1,0 +1,29 @@
+package domain
+
+import "errors"
+
+var (
+	ErrNotFound     = errors.New("not found")
+	ErrInvalid      = errors.New("invalid")
+	ErrUnauthorized = errors.New("unauthorized")
+	ErrConflict     = errors.New("conflict")
+)
+
+type Error struct {
+	Code    string
+	Message string
+	Err     error
+}
+
+func (e *Error) Error() string {
+	if e.Err != nil {
+		return e.Message + ": " + e.Err.Error()
+	}
+	return e.Message
+}
+
+func (e *Error) Unwrap() error { return e.Err }
+
+func NewError(code, message string, err error) *Error {
+	return &Error{Code: code, Message: message, Err: err}
+}
