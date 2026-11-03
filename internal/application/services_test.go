@@ -95,6 +95,8 @@ func (f *fakeClicks) CountToday(context.Context) (int64, error)              { r
 
 type fakeAffiliate struct{}
 
+func (fakeAffiliate) Name() string { return "fake" }
+
 func (fakeAffiliate) GenerateLink(context.Context, domain.Offer) (string, error) {
 	return "https://merchant.example/item?aff_sub=offer-7", nil
 }

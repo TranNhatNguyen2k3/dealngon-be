@@ -75,8 +75,14 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		Variants: variants, Offers: offers, History: history, Deals: deals, Cache: cache,
 		SeedMerchants: seedMerchants, CategoryLabels: merchant.CategoryNames(),
 	}
+	affiliateProvider := affiliate.NewProvider(affiliate.Config{
+		Provider:   cfg.AffiliateProvider,
+		AccessKey:  cfg.AccessTradeAccessKey,
+		SiteID:     cfg.AccessTradeSiteID,
+		APIBaseURL: cfg.AccessTradeAPIBaseURL,
+	})
 	affiliateService := &application.AffiliateService{
-		Offers: offers, Clicks: clicks, Provider: affiliate.MockProvider{},
+		Offers: offers, Clicks: clicks, Provider: affiliateProvider,
 	}
 	issuer := auth.NewIssuer(cfg.JWTSecret, cfg.IPHashSalt)
 	adminService := &application.AdminService{

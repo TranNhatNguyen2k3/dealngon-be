@@ -9,6 +9,8 @@ import (
 
 type MockProvider struct{}
 
+func (MockProvider) Name() string { return "mock" }
+
 func (MockProvider) GenerateLink(ctx context.Context, offer domain.Offer) (string, error) {
 	raw := offer.ProductURL
 	if raw == "" {

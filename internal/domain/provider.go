@@ -48,6 +48,7 @@ type MerchantProvider interface {
 }
 
 type AffiliateProvider interface {
+	Name() string
 	GenerateLink(ctx context.Context, offer Offer) (string, error)
 }
 

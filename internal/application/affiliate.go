@@ -40,7 +40,11 @@ func (s *AffiliateService) Redirect(ctx context.Context, input ClickInput) (stri
 	if err != nil {
 		return "", err
 	}
-	if err := s.Clicks.SaveLink(ctx, offer.ID, link, "mock"); err != nil {
+	providerName := "mock"
+	if s.Provider != nil && s.Provider.Name() != "" {
+		providerName = s.Provider.Name()
+	}
+	if err := s.Clicks.SaveLink(ctx, offer.ID, link, providerName); err != nil {
 		return "", err
 	}
 	if err := s.Offers.SetAffiliateURL(ctx, offer.ID, link); err != nil {

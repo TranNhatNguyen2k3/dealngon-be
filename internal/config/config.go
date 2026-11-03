@@ -7,17 +7,21 @@ import (
 )
 
 type Config struct {
-	AppEnv         string
-	Port           string
-	DatabaseURL    string
-	RedisAddr      string
-	JWTSecret      string
-	FrontendURL    string
-	AdminEmail     string
-	AdminPassword  string
-	AdminName      string
-	WorkerInterval time.Duration
-	IPHashSalt     string
+	AppEnv                string
+	Port                  string
+	DatabaseURL           string
+	RedisAddr             string
+	JWTSecret             string
+	FrontendURL           string
+	AdminEmail            string
+	AdminPassword         string
+	AdminName             string
+	WorkerInterval        time.Duration
+	IPHashSalt            string
+	AffiliateProvider     string
+	AccessTradeAccessKey  string
+	AccessTradeSiteID     string
+	AccessTradeAPIBaseURL string
 }
 
 func Load() Config {
@@ -34,17 +38,21 @@ func Load() Config {
 		parsed = 15 * time.Minute
 	}
 	return Config{
-		AppEnv:         getenv("APP_ENV", "development"),
-		Port:           getenv("SERVER_PORT", "8080"),
-		DatabaseURL:    fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, name),
-		RedisAddr:      redisHost + ":" + redisPort,
-		JWTSecret:      getenv("JWT_SECRET", "change_me"),
-		FrontendURL:    getenv("FRONTEND_URL", "http://localhost:5173"),
-		AdminEmail:     getenv("ADMIN_EMAIL", "admin@dealngon.local"),
-		AdminPassword:  getenv("ADMIN_PASSWORD", "admin123456"),
-		AdminName:      getenv("ADMIN_NAME", "DealNgon Admin"),
-		WorkerInterval: parsed,
-		IPHashSalt:     getenv("IP_HASH_SALT", "dev-salt"),
+		AppEnv:                getenv("APP_ENV", "development"),
+		Port:                  getenv("SERVER_PORT", "8080"),
+		DatabaseURL:           fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, name),
+		RedisAddr:             redisHost + ":" + redisPort,
+		JWTSecret:             getenv("JWT_SECRET", "change_me"),
+		FrontendURL:           getenv("FRONTEND_URL", "http://localhost:5173"),
+		AdminEmail:            getenv("ADMIN_EMAIL", "admin@dealngon.local"),
+		AdminPassword:         getenv("ADMIN_PASSWORD", "admin123456"),
+		AdminName:             getenv("ADMIN_NAME", "DealNgon Admin"),
+		WorkerInterval:        parsed,
+		IPHashSalt:            getenv("IP_HASH_SALT", "dev-salt"),
+		AffiliateProvider:     getenv("AFFILIATE_PROVIDER", ""),
+		AccessTradeAccessKey:  getenv("ACCESSTRADE_ACCESS_KEY", ""),
+		AccessTradeSiteID:     getenv("ACCESSTRADE_SITE_ID", ""),
+		AccessTradeAPIBaseURL: getenv("ACCESSTRADE_API_BASE_URL", "https://api.accesstrade.vn"),
 	}
 }
 
