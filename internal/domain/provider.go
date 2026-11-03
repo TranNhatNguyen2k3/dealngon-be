@@ -60,3 +60,16 @@ type Cache interface {
 	Set(ctx context.Context, key string, value []byte, ttl time.Duration) error
 	DeletePrefix(ctx context.Context, prefix string) error
 }
+
+type RateLimiter interface {
+	Allow(ctx context.Context, key string, limit int64, window time.Duration) (bool, error)
+}
+
+type TokenIssuer interface {
+	Issue(adminID uint64, email string) (string, error)
+	Parse(token string) (uint64, error)
+}
+
+type IPHasher interface {
+	Hash(ip string) string
+}

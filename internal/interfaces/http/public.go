@@ -8,7 +8,6 @@ import (
 
 	"github.com/dealngon/backend/internal/application"
 	"github.com/dealngon/backend/internal/domain"
-	"github.com/dealngon/backend/internal/infrastructure/auth"
 	"github.com/gin-gonic/gin"
 )
 
@@ -216,18 +215,22 @@ func (s *Server) redirect(c *gin.Context) {
 	if !okID {
 		return
 	}
-	if s.Cache != nil {
+	if s.Limiter != nil {
 		key := "rl:redirect:" + c.ClientIP()
-		allowed, err := s.Cache.Allow(c.Request.Context(), key, 30, time.Minute)
+		allowed, err := s.Limiter.Allow(c.Request.Context(), key, 30, time.Minute)
 		if err == nil && !allowed {
 			fail(c, http.StatusTooManyRequests, "RATE_LIMITED", "Quá nhiều yêu cầu, thử lại sau")
 			return
 		}
 	}
+	ipHash := ""
+	if s.Hasher != nil {
+		ipHash = s.Hasher.Hash(c.ClientIP())
+	}
 	link, err := s.Affiliate.Redirect(c.Request.Context(), application.ClickInput{
 		OfferID:     id,
 		SessionID:   sessionID(c),
-		IPHash:      auth.HashIP(s.IPHashSalt, c.ClientIP()),
+		IPHash:      ipHash,
 		UserAgent:   c.Request.UserAgent(),
 		Referer:     c.Request.Referer(),
 		UTMSource:   c.Query("utm_source"),

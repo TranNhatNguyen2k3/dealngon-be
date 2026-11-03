@@ -6,8 +6,7 @@ import (
 	"net/http"
 
 	"github.com/dealngon/backend/internal/application"
-	"github.com/dealngon/backend/internal/infrastructure/auth"
-	"github.com/dealngon/backend/internal/infrastructure/redis"
+	"github.com/dealngon/backend/internal/domain"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,19 +17,19 @@ var openAPISpec []byte
 var swaggerHTML []byte
 
 type Server struct {
-	Catalog    *application.CatalogService
-	Affiliate  *application.AffiliateService
-	Admin      *application.AdminService
-	Tokens     *auth.Issuer
-	Cache      *rediscache.Client
-	IPHashSalt string
-	PingDB     func(context.Context) error
-	PingRedis  func(context.Context) error
+	Catalog   *application.CatalogService
+	Affiliate *application.AffiliateService
+	Admin     *application.AdminService
+	Tokens    domain.TokenIssuer
+	Limiter   domain.RateLimiter
+	Hasher    domain.IPHasher
+	PingDB    func(context.Context) error
+	PingRedis func(context.Context) error
 }
 
 func NewRouter(server *Server) *gin.Engine {
 	router := gin.New()
-	router.Use(RequestID(), AccessLog(), gin.Recovery(), SecureHeaders(), CORS(server.frontendOrigin()), MaxBody(1<<20), RateLimit(server.Cache, 120))
+	router.Use(RequestID(), AccessLog(), gin.Recovery(), SecureHeaders(), CORS(server.frontendOrigin()), MaxBody(1<<20), RateLimit(server.Limiter, 120))
 
 	router.GET("/health", server.health)
 	router.GET("/ready", server.ready)

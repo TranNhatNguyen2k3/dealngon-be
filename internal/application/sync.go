@@ -6,22 +6,23 @@ import (
 	"time"
 
 	"github.com/dealngon/backend/internal/domain"
-	"github.com/dealngon/backend/internal/infrastructure/merchant"
 )
 
 type SyncService struct {
-	Providers  []domain.MerchantProvider
-	Matcher    domain.ProductMatcher
-	Brands     domain.BrandRepository
-	Categories domain.CategoryRepository
-	Merchants  domain.MerchantRepository
-	Products   domain.ProductRepository
-	Variants   domain.VariantRepository
-	Offers     domain.OfferRepository
-	History    domain.PriceHistoryRepository
-	Deals      domain.DealRepository
-	Cache      domain.Cache
-	Now        func() time.Time
+	Providers      []domain.MerchantProvider
+	Matcher        domain.ProductMatcher
+	Brands         domain.BrandRepository
+	Categories     domain.CategoryRepository
+	Merchants      domain.MerchantRepository
+	Products       domain.ProductRepository
+	Variants       domain.VariantRepository
+	Offers         domain.OfferRepository
+	History        domain.PriceHistoryRepository
+	Deals          domain.DealRepository
+	Cache          domain.Cache
+	SeedMerchants  []domain.Merchant
+	CategoryLabels map[string]string
+	Now            func() time.Time
 }
 
 func (s *SyncService) now() time.Time {
@@ -78,20 +79,17 @@ func (s *SyncService) Run(ctx context.Context) error {
 }
 
 func (s *SyncService) ensureMerchants(ctx context.Context) error {
-	for _, info := range merchant.Directory() {
-		_, err := s.Merchants.Upsert(ctx, domain.Merchant{
-			Name:             info.Name,
-			Slug:             info.Slug,
-			Website:          info.Website,
-			AffiliateEnabled: true,
-			Status:           domain.StatusActive,
-			QualityScore:     info.QualityScore,
-		})
-		if err != nil {
+	for _, info := range s.SeedMerchants {
+		merchant := info
+		if merchant.Status == "" {
+			merchant.Status = domain.StatusActive
+		}
+		merchant.AffiliateEnabled = true
+		if _, err := s.Merchants.Upsert(ctx, merchant); err != nil {
 			return err
 		}
 	}
-	for slug, name := range merchant.CategoryNames() {
+	for slug, name := range s.CategoryLabels {
 		if _, err := s.Categories.Upsert(ctx, domain.Category{Name: name, Slug: slug}); err != nil {
 			return err
 		}
@@ -140,7 +138,7 @@ func (s *SyncService) createCatalog(ctx context.Context, item domain.ExternalPro
 		return nil, err
 	}
 	categoryName := item.Category
-	if name, ok := merchant.CategoryNames()[item.Category]; ok {
+	if name, ok := s.CategoryLabels[item.Category]; ok {
 		categoryName = name
 	}
 	category, err := s.Categories.Upsert(ctx, domain.Category{Name: categoryName, Slug: domain.Slugify(item.Category)})

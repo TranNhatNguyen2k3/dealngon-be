@@ -16,8 +16,8 @@ type loginRequest struct {
 }
 
 func (s *Server) login(c *gin.Context) {
-	if s.Cache != nil {
-		allowed, err := s.Cache.Allow(c.Request.Context(), "rl:login:"+c.ClientIP(), 10, time.Minute)
+	if s.Limiter != nil {
+		allowed, err := s.Limiter.Allow(c.Request.Context(), "rl:login:"+c.ClientIP(), 10, time.Minute)
 		if err == nil && !allowed {
 			fail(c, http.StatusTooManyRequests, "RATE_LIMITED", "Quá nhiều lần đăng nhập")
 			return
@@ -85,7 +85,7 @@ func (s *Server) deleteProduct(c *gin.Context) {
 }
 
 func (s *Server) adminBrands(c *gin.Context) {
-	items, err := s.Admin.Brands.List(c.Request.Context())
+	items, err := s.Admin.ListBrands(c.Request.Context())
 	if err != nil {
 		writeError(c, err)
 		return
@@ -115,7 +115,7 @@ func (s *Server) deleteBrand(c *gin.Context) {
 }
 
 func (s *Server) adminCategories(c *gin.Context) {
-	items, err := s.Admin.Categories.List(c.Request.Context())
+	items, err := s.Admin.ListCategories(c.Request.Context())
 	if err != nil {
 		writeError(c, err)
 		return
@@ -145,7 +145,7 @@ func (s *Server) deleteCategory(c *gin.Context) {
 }
 
 func (s *Server) adminMerchants(c *gin.Context) {
-	items, err := s.Admin.Merchants.List(c.Request.Context())
+	items, err := s.Admin.ListMerchants(c.Request.Context())
 	if err != nil {
 		writeError(c, err)
 		return

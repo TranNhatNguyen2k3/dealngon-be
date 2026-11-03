@@ -17,10 +17,15 @@ func HashIP(salt, ip string) string {
 
 type Issuer struct {
 	secret []byte
+	salt   string
 }
 
-func NewIssuer(secret string) *Issuer {
-	return &Issuer{secret: []byte(secret)}
+func NewIssuer(secret, ipSalt string) *Issuer {
+	return &Issuer{secret: []byte(secret), salt: ipSalt}
+}
+
+func (i *Issuer) Hash(ip string) string {
+	return HashIP(i.salt, ip)
 }
 
 func (i *Issuer) Issue(adminID uint64, email string) (string, error) {

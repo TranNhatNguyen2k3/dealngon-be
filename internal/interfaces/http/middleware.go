@@ -8,8 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dealngon/backend/internal/infrastructure/auth"
-	"github.com/dealngon/backend/internal/infrastructure/redis"
+	"github.com/dealngon/backend/internal/domain"
 	"github.com/gin-gonic/gin"
 )
 
@@ -74,14 +73,14 @@ func MaxBody(limit int64) gin.HandlerFunc {
 	}
 }
 
-func RateLimit(cache *rediscache.Client, limit int64) gin.HandlerFunc {
+func RateLimit(limiter domain.RateLimiter, limit int64) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if cache == nil {
+		if limiter == nil {
 			c.Next()
 			return
 		}
 		key := "rl:" + c.ClientIP() + ":" + time.Now().UTC().Format("200601021504")
-		allowed, err := cache.Allow(c.Request.Context(), key, limit, time.Minute)
+		allowed, err := limiter.Allow(c.Request.Context(), key, limit, time.Minute)
 		if err != nil {
 			slog.Error("rate limit", "error", err.Error())
 			c.Next()
@@ -96,7 +95,7 @@ func RateLimit(cache *rediscache.Client, limit int64) gin.HandlerFunc {
 	}
 }
 
-func RequireAdmin(issuer *auth.Issuer) gin.HandlerFunc {
+func RequireAdmin(issuer domain.TokenIssuer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		header := c.GetHeader("Authorization")
 		token := strings.TrimPrefix(header, "Bearer ")

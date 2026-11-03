@@ -9,11 +9,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type TokenIssuer interface {
-	Issue(adminID uint64, email string) (string, error)
-	Parse(token string) (uint64, error)
-}
-
 type AdminService struct {
 	Admins     domain.AdminRepository
 	Products   domain.ProductRepository
@@ -27,7 +22,7 @@ type AdminService struct {
 	SEO        domain.SEORepository
 	Clicks     domain.AffiliateClickRepository
 	Audits     domain.AuditRepository
-	Tokens     TokenIssuer
+	Tokens     domain.TokenIssuer
 	Sync       *SyncService
 	Catalog    *CatalogService
 }
@@ -224,6 +219,30 @@ func (s *AdminService) ListProducts(ctx context.Context, page, limit int) ([]dom
 		items = []domain.Product{}
 	}
 	return items, domain.PageMeta{Page: page, Limit: limit, Total: total}, err
+}
+
+func (s *AdminService) ListBrands(ctx context.Context) ([]domain.Brand, error) {
+	items, err := s.Brands.List(ctx)
+	if items == nil {
+		items = []domain.Brand{}
+	}
+	return items, err
+}
+
+func (s *AdminService) ListCategories(ctx context.Context) ([]domain.Category, error) {
+	items, err := s.Categories.List(ctx)
+	if items == nil {
+		items = []domain.Category{}
+	}
+	return items, err
+}
+
+func (s *AdminService) ListMerchants(ctx context.Context) ([]domain.Merchant, error) {
+	items, err := s.Merchants.List(ctx)
+	if items == nil {
+		items = []domain.Merchant{}
+	}
+	return items, err
 }
 
 func (s *AdminService) SaveProduct(ctx context.Context, adminID uint64, input ProductWrite) (*domain.Product, error) {

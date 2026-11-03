@@ -6,6 +6,7 @@ import (
 
 	"github.com/dealngon/backend/internal/application"
 	"github.com/dealngon/backend/internal/config"
+	"github.com/dealngon/backend/internal/domain"
 	"github.com/dealngon/backend/internal/infrastructure/affiliate"
 	"github.com/dealngon/backend/internal/infrastructure/auth"
 	"github.com/dealngon/backend/internal/infrastructure/matcher"
@@ -61,15 +62,23 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		Brands: brands, Categories: categories, Merchants: merchants, Coupons: coupons, SEO: seo,
 		Alerts: alerts, Searches: searches, Events: events, Cache: cache, FrontendURL: cfg.FrontendURL,
 	}
+	seedMerchants := make([]domain.Merchant, 0, len(merchant.Directory()))
+	for _, info := range merchant.Directory() {
+		seedMerchants = append(seedMerchants, domain.Merchant{
+			Name: info.Name, Slug: info.Slug, Website: info.Website,
+			AffiliateEnabled: true, Status: domain.StatusActive, QualityScore: info.QualityScore,
+		})
+	}
 	syncService := &application.SyncService{
 		Providers: merchant.AllProviders(), Matcher: matcher.New(variants),
 		Brands: brands, Categories: categories, Merchants: merchants, Products: products,
 		Variants: variants, Offers: offers, History: history, Deals: deals, Cache: cache,
+		SeedMerchants: seedMerchants, CategoryLabels: merchant.CategoryNames(),
 	}
 	affiliateService := &application.AffiliateService{
 		Offers: offers, Clicks: clicks, Provider: affiliate.MockProvider{},
 	}
-	issuer := auth.NewIssuer(cfg.JWTSecret)
+	issuer := auth.NewIssuer(cfg.JWTSecret, cfg.IPHashSalt)
 	adminService := &application.AdminService{
 		Admins: admins, Products: products, Variants: variants, Offers: offers, Brands: brands,
 		Categories: categories, Merchants: merchants, Deals: deals, Coupons: coupons, SEO: seo,
@@ -100,10 +109,9 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	router := httpapi.NewRouter(&httpapi.Server{
-		Catalog: catalog, Affiliate: affiliateService, Admin: adminService, Tokens: issuer,
-		Cache: cache, IPHashSalt: cfg.IPHashSalt,
-		PingDB:    pool.Ping,
-		PingRedis: cache.Ping,
+		Catalog: catalog, Affiliate: affiliateService, Admin: adminService,
+		Tokens: issuer, Limiter: cache, Hasher: issuer,
+		PingDB: pool.Ping, PingRedis: cache.Ping,
 	})
 	return &App{Config: &cfg, Router: router, Pool: pool, Redis: cache, Sync: syncService}, nil
 }
